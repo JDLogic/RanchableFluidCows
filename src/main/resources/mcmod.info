@@ -3,15 +3,15 @@
   "modid": "RanchableFluidCows",
   "name": "Ranchable Fluid Cows",
   "description": "Enables the MFR rancher to 'Milk' the cows from Moo Fluids.",
-  "version": "1.1.1-Beta",
+  "version": "1.1.2-Beta",
   "mcversion": "1.7.10",
   "url": "",
   "updateUrl": "",
   "authorList": ["JDLogic"],
   "credits": "",
-  "logoFile": "",
+  "logoFile": "assets/ranchablefluidcows/Ranchable_Fluid_Cows_Logo.png",
   "screenshots": [],
-  "requiredMods": [ "MineFactoryReloaded", "CoFHCore", "MooFluids" ],
-  "dependencies": [ "MineFactoryReloaded", "CoFHCore", "MooFluids" ]
+  "requiredMods": ["MineFactoryReloaded", "CoFHCore", "MooFluids"],
+  "dependencies": ["MineFactoryReloaded", "CoFHCore", "MooFluids"]
 }
 ]
