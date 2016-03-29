@@ -2,7 +2,7 @@ package com.jdlogic.ranchablefluidcows;
 
 import com.jdlogic.ranchablefluidcows.handler.ConfigHandler;
 import com.jdlogic.ranchablefluidcows.handler.FakePlayerInteractionHandler;
-import com.jdlogic.ranchablefluidcows.packet.CowUpdatePacket;
+import com.jdlogic.ranchablefluidcows.network.CowUpdateMessage;
 import com.jdlogic.ranchablefluidcows.ranchable.RanchableFC;
 import com.jdlogic.ranchablefluidcows.reference.Reference;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -19,13 +19,12 @@ import powercrystals.minefactoryreloaded.api.FactoryRegistry;
 import powercrystals.minefactoryreloaded.api.IFactoryRanchable;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-        dependencies = "required-after:MineFactoryReloaded;required-after:CoFHCore;after:*")
+        dependencies = Reference.MOD_DEPENDENCIES)
 
 public class RanchableFluidCows
 {
     @Mod.Instance(Reference.MOD_ID)
     public static RanchableFluidCows instance;
-
 
     public static SimpleNetworkWrapper network;
 
@@ -38,7 +37,7 @@ public class RanchableFluidCows
         if (Loader.isModLoaded("MooFluids"))
         {
             network = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
-            network.registerMessage(CowUpdatePacket.Handler.class, CowUpdatePacket.class, 0, Side.CLIENT);
+            network.registerMessage(CowUpdateMessage.Handler.class, CowUpdateMessage.class, 0, Side.CLIENT);
 
             if (ConfigHandler.fakePlayerFix)
             {
@@ -48,10 +47,7 @@ public class RanchableFluidCows
     }
 
     @Mod.EventHandler
-    public void init(FMLInitializationEvent evnet)
-    {
-
-    }
+    public void init(FMLInitializationEvent evnet) {}
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event)
