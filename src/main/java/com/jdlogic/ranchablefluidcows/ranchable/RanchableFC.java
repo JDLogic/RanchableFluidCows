@@ -92,10 +92,12 @@ public class RanchableFC implements IFactoryRanchable
     {
         NBTTagCompound tag = fluidCow.getEntityData();
 
-        if (tag.hasKey("rfc:nextUpdate") && tag.getLong("rfc:nextUpdate") < worldTime)
+        if (tag.hasKey("rfc:nextUpdate") && tag.getLong("rfc:nextUpdate") > worldTime)
         {
-            sendPacket(fluidCow);
+            return;
         }
+        
+        sendPacket(fluidCow);
         tag.setLong("rfc:nextUpdate", worldTime + 20 * 10);
     }
 
