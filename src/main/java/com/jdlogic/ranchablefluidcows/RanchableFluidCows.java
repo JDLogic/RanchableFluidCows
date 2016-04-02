@@ -37,7 +37,11 @@ public class RanchableFluidCows
         if (Loader.isModLoaded("MooFluids"))
         {
             network = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
-            network.registerMessage(CowUpdateMessage.Handler.class, CowUpdateMessage.class, 0, Side.CLIENT);
+
+            if (event.getSide() == Side.CLIENT)
+            {
+                network.registerMessage(CowUpdateMessage.Handler.class, CowUpdateMessage.class, 0, Side.CLIENT);
+            }
 
             if (ConfigHandler.fakePlayerFix)
             {
