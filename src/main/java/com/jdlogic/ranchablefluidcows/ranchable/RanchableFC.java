@@ -17,8 +17,10 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTankInfo;
 import powercrystals.minefactoryreloaded.api.IFactoryRanchable;
 import powercrystals.minefactoryreloaded.api.RanchedItem;
+import powercrystals.minefactoryreloaded.tile.machine.TileEntityRancher;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,60 +34,31 @@ public class RanchableFC implements IFactoryRanchable
 
     public List<RanchedItem> ranch(World world, EntityLivingBase entity, IInventory rancher)
     {
-        LinkedList<RanchedItem> localLinkedList = new LinkedList<RanchedItem>();
-
         if (entity instanceof EntityFluidCow)
         {
             EntityFluidCow entityFluidCow = (EntityFluidCow)entity;
 
-            int currentUseCooldown = entityFluidCow.getCurrentUseCooldown();
-
-            if (currentUseCooldown > 0)
+            if (entityFluidCow.getCurrentUseCooldown() > 0) // Cow is not ready
             {
-                updateClient(entityFluidCow, world.getTotalWorldTime());
+                updateClient(entityFluidCow, world.getTotalWorldTime()); // Sync cooldown with the client
                 return null;
             }
 
-            int maxCooldown = (int)(entityFluidCow.getEntityTypeData().getMaxUseCooldown() * ConfigHandler.penaltyMultiplier);
+            List<RanchedItem> retList = getAcceptableItemList(entityFluidCow.getEntityFluid(), rancher);
 
-            entityFluidCow.setCurrentUseCooldown(maxCooldown);
-
-            sendPacket(entityFluidCow);
-
-            IInventoryManager localIInventoryManager = InventoryManager.create(rancher, ForgeDirection.UP);
-
-            ItemStack bucket = new ItemStack(Items.bucket);
-
-            int i = localIInventoryManager.findItem(bucket);
-
-            Fluid fluid = entityFluidCow.getEntityFluid();
-
-            FluidStack localFluidStack = new FluidStack(fluid, 1000);
-
-            if (i >= 0)
+            if (retList != null) // The rancher can accept something
             {
-                ItemStack filledItemStack = FluidContainerRegistry.fillFluidContainer(localFluidStack, bucket);
+                int maxCooldown = (int)(entityFluidCow.getEntityTypeData().getMaxUseCooldown() * ConfigHandler.penaltyMultiplier);
 
-                if (filledItemStack == null)
-                {
-                    return null;
-                }
+                entityFluidCow.setCurrentUseCooldown(maxCooldown);
 
-                localLinkedList.add(new RanchedItem(filledItemStack));
+                sendPacket(entityFluidCow);
 
-                rancher.decrStackSize(i, 1);
+                return retList;
             }
-            else
-            {
-                localLinkedList.add(new RanchedItem(localFluidStack));
-            }
+        }
 
-            return localLinkedList;
-        }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 
     public static void updateClient(EntityFluidCow fluidCow, long worldTime)
@@ -106,5 +79,54 @@ public class RanchableFC implements IFactoryRanchable
         NetworkRegistry.TargetPoint targetPoint = new NetworkRegistry.TargetPoint(fluidCow.dimension, fluidCow.posX, fluidCow.posY, fluidCow.posZ, 128D);
 
         RanchableFluidCows.network.sendToAllAround(new CowUpdateMessage(fluidCow), targetPoint);
+    }
+
+    public static List<RanchedItem> getAcceptableItemList(Fluid cowFluid, IInventory inv)
+    {
+        FluidStack localFluidStack = new FluidStack(cowFluid, 1000);
+
+        IInventoryManager localIInventoryManager = InventoryManager.create(inv, ForgeDirection.UP);
+
+        ItemStack bucket = new ItemStack(Items.bucket);
+
+        int i = localIInventoryManager.findItem(bucket);
+
+        if (i >= 0) // The rancher has a bucket
+        {
+            ItemStack filledItemStack = FluidContainerRegistry.fillFluidContainer(localFluidStack, bucket);
+
+            if (filledItemStack != null) // The bucket was filled
+            {
+                LinkedList<RanchedItem> retList = new LinkedList<RanchedItem>();
+
+                retList.add(new RanchedItem(filledItemStack));
+
+                inv.decrStackSize(i, 1);
+
+                return retList;
+            }
+        }
+
+        if (inv instanceof TileEntityRancher) // No bucket found or it cannot hold the fluid; Let's try the tank
+        {
+            TileEntityRancher rancher = (TileEntityRancher)inv;
+
+            FluidTankInfo[] tankInfoArr = rancher.getTankInfo(ForgeDirection.UP); // Direction is not checked
+
+            for (FluidTankInfo tankInfo : tankInfoArr)
+            {
+                // The tank is empty OR (the fluid in the tank is the same AND the tank has room to accept it)
+                if (tankInfo.fluid == null || (tankInfo.fluid.getFluid() == cowFluid && rancher.fill(localFluidStack, false) == 1000))
+                {
+                    LinkedList<RanchedItem> retList = new LinkedList<RanchedItem>();
+
+                    retList.add(new RanchedItem(localFluidStack));
+
+                    return retList;
+                }
+            }
+        }
+
+        return null; // No buckets and the tank is not usable
     }
 }
