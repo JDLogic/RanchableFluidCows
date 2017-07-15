@@ -1,16 +1,30 @@
 
-.gradle/*
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
 
-RanchableFluidCows.iml
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
 
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+.DS_Store
 *.bak
-
 *.jar
-
 Ranchable Fluid Cows Logo.png
-
 RFC screen shot 1.png
-
 RFC screen shot 2.png
-
 RFC screen shot 3.png

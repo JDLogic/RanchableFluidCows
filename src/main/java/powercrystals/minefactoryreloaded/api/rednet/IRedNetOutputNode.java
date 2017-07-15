@@ -1,7 +1,8 @@
 package powercrystals.minefactoryreloaded.api.rednet;
 
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.EnumFacing;
 
 import powercrystals.minefactoryreloaded.api.rednet.connectivity.IRedNetConnection;
 
@@ -27,25 +28,21 @@ public interface IRedNetOutputNode extends IRedNetConnection
 	 * Only called if your block is connected in "All" mode.
 	 * 
 	 * @param world The world this block is in.
-	 * @param x This block's X coordinate.
-	 * @param y This block's Y coordinate.
-	 * @param z This block's Z coordinate.
+	 * @param pos This block's position.
 	 * @param side The side the output values are required for.
 	 * @return The output values.
 	 */
-	public int[] getOutputValues(World world, int x, int y, int z, ForgeDirection side);
+	public int[] getOutputValues(World world, BlockPos pos, EnumFacing side);
 
 	/**
 	 * Returns the output value of this RedNet node for a given subnet.
 	 * Must be the same as getOutputValues(world, x, y, z, side)[subnet].
 	 * 
 	 * @param world The world this block is in.
-	 * @param x This block's X coordinate.
-	 * @param y This block's Y coordinate.
-	 * @param z This block's Z coordinate.
+	 * @param pos This block's position.
 	 * @param side The side the output value is required for.
 	 * @param subnet The subnet to get the output value for (0-15).
 	 * @return The output value.
 	 */
-	public int getOutputValue(World world, int x, int y, int z, ForgeDirection side, int subnet);
+	public int getOutputValue(World world, BlockPos pos, EnumFacing side, int subnet);
 }

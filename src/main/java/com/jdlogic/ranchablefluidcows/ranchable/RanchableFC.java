@@ -6,16 +6,17 @@ import com.jdlogic.ranchablefluidcows.RanchableFluidCows;
 import com.jdlogic.ranchablefluidcows.handler.ConfigHandler;
 import com.jdlogic.ranchablefluidcows.network.CowUpdateMessage;
 import com.robrit.moofluids.common.entity.EntityFluidCow;
-import cpw.mods.fml.common.network.NetworkRegistry;
+import net.minecraft.util.EnumFacing;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import powercrystals.minefactoryreloaded.api.IFactoryRanchable;
@@ -85,21 +86,21 @@ public class RanchableFC implements IFactoryRanchable
     {
         FluidStack localFluidStack = new FluidStack(cowFluid, 1000);
 
-        IInventoryManager localIInventoryManager = InventoryManager.create(inv, ForgeDirection.UP);
+        IInventoryManager localIInventoryManager = InventoryManager.create(inv, EnumFacing.UP);
 
-        ItemStack bucket = new ItemStack(Items.bucket);
+        ItemStack bucket = new ItemStack(Items.BUCKET);
 
         int i = localIInventoryManager.findItem(bucket);
 
         if (i >= 0) // The rancher has a bucket
         {
-            ItemStack filledItemStack = FluidContainerRegistry.fillFluidContainer(localFluidStack, bucket);
+            IFluidHandler fluidHandler = bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
 
-            if (filledItemStack != null) // The bucket was filled
+            if (fluidHandler != null && fluidHandler.fill(localFluidStack, true) == Fluid.BUCKET_VOLUME)
             {
                 LinkedList<RanchedItem> retList = new LinkedList<RanchedItem>();
 
-                retList.add(new RanchedItem(filledItemStack));
+                retList.add(new RanchedItem(bucket));
 
                 inv.decrStackSize(i, 1);
 
@@ -111,12 +112,12 @@ public class RanchableFC implements IFactoryRanchable
         {
             TileEntityRancher rancher = (TileEntityRancher)inv;
 
-            FluidTankInfo[] tankInfoArr = rancher.getTankInfo(ForgeDirection.UP); // Direction is not checked
+            FluidTankInfo[] tankInfoArr = rancher.getTankInfo();
 
             for (FluidTankInfo tankInfo : tankInfoArr)
             {
                 // The tank is empty OR (the fluid in the tank is the same AND the tank has room to accept it)
-                if (tankInfo.fluid == null || (tankInfo.fluid.getFluid() == cowFluid && rancher.fill(localFluidStack, false) == 1000))
+                if (tankInfo.fluid == null || (tankInfo.fluid.getFluid() == cowFluid && rancher.fill(null, localFluidStack, false) == 1000))
                 {
                     LinkedList<RanchedItem> retList = new LinkedList<RanchedItem>();
 

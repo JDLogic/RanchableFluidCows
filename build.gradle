@@ -1,71 +1,93 @@
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
         maven {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
     }
 }
 
-apply plugin: 'forge'
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "1.7.10-1.1.5"
-group= "com.jdlogic.ranchablefluidcows" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "RanchableFluidCows"
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+
+compileJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+version = "${minecraft_version}-${mod_version}"
+group = "${group_path}"
+archivesBaseName = "${filename_base}"
 
 minecraft {
-    version = "1.7.10-10.13.4.1614-1.7.10"
-    runDir = "eclipse"
+    version = "${minecraft_version}-${forge_version}"
+    runDir = "run"
+    
+    mappings = "${mappings_version}"
+
+    replace "@VERSION@", project.version
+    replaceIn "Reference.java"
+
+    if(project.hasProperty("keyStoreFingerprint")) {
+
+        replace "@FINGERPRINT@", project.keyStoreFingerprint
+        replaceIn "Reference.java"
+    }
+}
+
+repositories {
+    maven {
+        url  "http://chickenbones.net/maven/"
+    }
+    maven {
+        url  "http://maven.covers1624.net/"
+    }
+    maven {
+        url  "http://dvs1.progwml6.com/files/maven"
+    }
 }
 
 dependencies {
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-      
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
+    deobfCompile "cofh:CoFHCore:${minecraft_version}-${cofh_version}:deobf"
+    //deobfCompile "appeng:appliedenergistics2:rv4-${ae2_version}:dev"
+    runtime "codechicken:CodeChickenLib:${minecraft_version}-${chickenlib_version}:deobf"
 }
 
 processResources
 {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "minecraft_version", project.minecraft.version
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
+
         // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version':project.version, 'minecraft_version':project.minecraft.version
     }
         
-    // copy everything else, thats not the mcmod.info
+    // copy everything else, that's not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
 }
 
-sourceSets
-{ 
-    main 
-    { 
-        output.resourcesDir = output.classesDir 
-    } 
+task signUniversal(type: SignJar, dependsOn: 'jar') {
+    onlyIf {
+        project.hasProperty('keyStore')
+    }
+
+    alias = project.keyStoreAlias
+    storePass = project.keyStorePass
+    keyPass = project.keyStoreKeyPass
+    keyStore = project.keyStore
+    inputFile = jar.archivePath
+    outputFile = jar.archivePath
 }
+
+build.dependsOn signUniversal

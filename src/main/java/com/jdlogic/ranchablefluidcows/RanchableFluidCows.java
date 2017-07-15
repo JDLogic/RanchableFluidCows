@@ -5,22 +5,22 @@ import com.jdlogic.ranchablefluidcows.handler.FakePlayerInteractionHandler;
 import com.jdlogic.ranchablefluidcows.network.CowUpdateMessage;
 import com.jdlogic.ranchablefluidcows.ranchable.RanchableFC;
 import com.jdlogic.ranchablefluidcows.reference.Reference;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import cpw.mods.fml.relauncher.Side;
+import net.minecraftforge.fml.common.FMLLog;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.common.MinecraftForge;
+import org.apache.logging.log4j.Level;
 import powercrystals.minefactoryreloaded.api.FactoryRegistry;
-import powercrystals.minefactoryreloaded.api.IFactoryRanchable;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-        dependencies = Reference.MOD_DEPENDENCIES)
-
+        dependencies = Reference.MOD_DEPENDENCIES, certificateFingerprint = Reference.MOD_FINGERPRINT)
 public class RanchableFluidCows
 {
     @Mod.Instance(Reference.MOD_ID)
@@ -32,9 +32,9 @@ public class RanchableFluidCows
     public void preInit(FMLPreInitializationEvent event)
     {
         ConfigHandler.init(event.getSuggestedConfigurationFile());
-        FMLCommonHandler.instance().bus().register(new ConfigHandler());
+        MinecraftForge.EVENT_BUS.register(new ConfigHandler());
 
-        if (Loader.isModLoaded("MooFluids"))
+        if (Loader.isModLoaded("moofluids"))
         {
             network = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
 
@@ -51,16 +51,21 @@ public class RanchableFluidCows
     }
 
     @Mod.EventHandler
-    public void init(FMLInitializationEvent evnet) {}
+    public void init(FMLInitializationEvent event) {}
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
-        if (Loader.isModLoaded("MooFluids"))
+        if (Loader.isModLoaded("moofluids"))
         {
-            IFactoryRanchable ranchable = new RanchableFC();
-
-            FactoryRegistry.sendMessage("registerRanchable", ranchable);
+            FactoryRegistry.sendMessage("registerRanchable", new RanchableFC());
         }
+    }
+
+    @Mod.EventHandler
+    public static void invalidFingerprint(FMLFingerprintViolationEvent event)
+    {
+        FMLLog.log(Reference.MOD_ID, Level.ERROR,"The mod file is missing its signature or the one found does not match! Unless this is a dev environment," +
+                " it is recommended that you stop using this mod file as it has most likely been tampered with!");
     }
 }
